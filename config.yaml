@@ -1,0 +1,168 @@
+aws:
+  region: us-west-2
+  account: ${CDK_DEFAULT_ACCOUNT}
+
+stack:
+  name: ChatbotFrameworkStack
+
+chatbot:
+  use_classifier: false
+  models:
+    classifier: "us.amazon.nova-lite-v1:0"
+    rag: "anthropic.claude-3-5-sonnet-20241022-v2:0"
+  prompt:
+    system: |
+      You are an intelligent assistant that provides helpful information to users.
+      
+      Today's date is {current_date}. Answer according to today's date
+      
+      Recent conversation context:
+      {conversation_context}
+      
+      Knowledge Base Context:
+      {context}
+      
+      Current User Question: {query}
+      
+      Use retrieved context to provide accurate, detailed responses
+      If information is insufficient, clearly state "I don't have specific information about [topic]"
+      Suggest contacting the organization directly when appropriate
+      NEVER say "The provided context does not relate to your question"
+      
+      RESPONSE GUIDELINES:
+      Be conversational and helpful, not robotic
+      Provide specific details when available (dates, contact info, requirements)
+      Structure responses clearly with relevant details
+      Double-check contact information for accuracy
+      Suggest related resources or next steps when appropriate
+      Always prioritize accuracy, helpfulness, and user experience in your responses.
+      Do not explain your reasoning of the response
+    classifier: |
+      You are a query classifier for the chatbot assistant. Your job is to classify user messages into one of these categories:
+      
+      CATEGORIES:
+      1. "greeting" - Initial hellos, good morning/afternoon/evening, introductory messages
+      2. "farewell" - Thank you messages, goodbye, see you later, closing statements  
+      3. "knowledge_base" - Any questions or requests for information
+      
+      EXAMPLES:
+      - "Hi there" → greeting
+      - "Hello, how are you?" → greeting
+      - "Good morning!" → greeting
+      - "Thanks for your help" → farewell
+      - "Goodbye" → farewell
+      - "Thank you, that's all I needed" → farewell
+      - "What are the hours?" → knowledge_base
+      - "How do I contact support?" → knowledge_base
+      - "Tell me about your services" → knowledge_base
+      - "What's the weather like?" → knowledge_base
+      - "Can you help me with information?" → knowledge_base
+      - "I need help with something" → knowledge_base
+      
+      USER MESSAGE: "{user_input}"
+      
+      Respond with ONLY the category name (greeting, farewell, or knowledge_base). No explanation needed.
+  responses:
+    greeting: |
+      Hello! I'm here to help you with information. Ask me about:
+      
+      - Programs and services
+      - Hours and schedules  
+      - Contact information and staff directory
+      - Activities and events
+      - Policies and procedures
+      - General information
+      
+      What would you like to know?
+    farewell: |
+      Thank you for using the assistant! If you have any more questions, feel free to ask anytime. Have a great day!
+
+s3:
+  knowledge_base_bucket: my-existing-documents-bucket
+  frontend_bucket: chatbot-frontend
+
+ui:
+  name: "My AI Assistant"
+  description: "Get help with information and questions"
+  colors:
+    primary: "#1A2F71"
+    secondary: "#48AEB2"
+    background_gradient_start: "#1A2F71"
+    background_gradient_end: "#48AEB2"
+
+dynamodb:
+  table_name: chatbot-conversations
+
+bedrock:
+  knowledge_base_id: ${KNOWLEDGE_BASE_ID}
+  knowledge_base_name: MyKnowledgeBase
+  embedding_model: amazon.titan-embed-text-v2:0
+  search:
+    type: SEMANTIC  # Options: SEMANTIC, HYBRID
+    number_of_results: 10
+  chunking:
+    strategy: SEMANTIC
+    max_tokens: 300
+    buffer_size: 0
+    breakpoint_percentile_threshold: 95
+
+opensearch:
+  domain_name: chatbot-kb
+  version: "2.3"
+  instance_type: t3.small.search
+  instance_count: 1
+  volume_size: 10
+  volume_type: gp3
+  index_name: chatbotindex
+  vector_field: vector
+  text_field: text
+  metadata_field: metadata
+  vector_dimension: 1024
+  space_type: l2
+  engine: FAISS
+
+lambda:
+  timeout: 300
+  memory: 512
+  runtime: python3.13
+  chatbot:
+    timeout: 300
+    memory: 1024
+  environment_variables:
+    CHATBOT_NAME: "${ui.name}"
+    CHATBOT_DESCRIPTION: "${ui.description}"
+    USE_CLASSIFIER: "${chatbot.use_classifier}"
+    CLASSIFIER_MODEL_ID: "${chatbot.models.classifier}"
+    RAG_MODEL_ID: "${chatbot.models.rag}"
+    SEARCH_TYPE: "${bedrock.search.type}"
+    NUMBER_OF_RESULTS: "${bedrock.search.number_of_results}"
+    SYSTEM_PROMPT: "${chatbot.prompt.system}"
+    CLASSIFIER_PROMPT: "${chatbot.prompt.classifier}"
+    GREETING_RESPONSE: "${chatbot.responses.greeting}"
+    FAREWELL_RESPONSE: "${chatbot.responses.farewell}"
+
+api:
+  name: ChatbotAPI
+  cors:
+    allow_origins: ["*"]
+    allow_methods: ["GET", "POST", "OPTIONS"]
+    allow_headers: ["Content-Type", "Authorization"]
+
+cloudfront:
+  default_root_object: index.html
+  error_responses:
+    - http_status: 404
+      response_http_status: 200
+      response_page_path: /index.html
+
+environments:
+  dev:
+    debug: true
+    cors_origins: ["*"]
+    s3_suffix: dev
+    opensearch_suffix: dev
+  prod:
+    debug: false
+    cors_origins: ["https://your-domain.com"]
+    s3_suffix: prod
+    opensearch_suffix: prod
