@@ -19,6 +19,8 @@ You can use this README file to find out how to build, deploy, use and test the 
 - [Deployment](#initial-setup)
 - [Configurations](#configuration)
 - [Ingestion](#knowledge-base-sync-ingestion)
+- [Updating Changes](#updating-changes)
+- [Support](#support)
 
 # Collaboration
 
@@ -250,3 +252,10 @@ After making changes to the code you can deploy them by running
   ```bash
   ./scripts/deploy.sh
   ```
+
+## Support
+
+For any queries or issues, please contact:
+
+- Darren Kraker - <dkraker@amazon.com>
+- Shrey Shah, Jr. SDE - <sshah84@calpoly.edu>
