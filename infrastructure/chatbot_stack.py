@@ -139,7 +139,7 @@ class ChatbotStack(Stack):
         # Lambda Layer for opensearch-py
         opensearch_layer = lambda_.LayerVersion(
             self, "OpenSearchLayer",
-            code=lambda_.Code.from_asset("lambda-layers/opensearch-layer", bundling={
+            code=lambda_.Code.from_asset("backend/layers/python-dependencies", bundling={
                 "image": lambda_.Runtime.PYTHON_3_9.bundling_image,
                 "command": [
                     "bash", "-c",
@@ -308,7 +308,7 @@ class ChatbotStack(Stack):
             runtime=lambda_.Runtime.PYTHON_3_13,
             architecture=lambda_.Architecture.X86_64,
             handler="lambda_function.lambda_handler",
-            code=lambda_.Code.from_asset("lambda/chatbot"),
+            code=lambda_.Code.from_asset("backend/lambda/chatbot"),
             timeout=Duration.seconds(self.config.CHATBOT_TIMEOUT),
             memory_size=self.config.CHATBOT_MEMORY,
             environment={
