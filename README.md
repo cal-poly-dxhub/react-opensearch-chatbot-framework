@@ -19,6 +19,7 @@ You can use this README file to find out how to build, deploy, use and test the 
 - [Deployment](#initial-setup)
 - [Configurations](#configuration)
 - [Ingestion](#knowledge-base-sync-ingestion)
+- [Updating Changes](#updating-changes)
 - [Support](#support)
 
 # Collaboration
