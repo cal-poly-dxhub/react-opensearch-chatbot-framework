@@ -9,21 +9,28 @@ echo "Building frontend with configuration..."
 cd frontend
 
 # Load configuration from Python config
-CONFIG_VALUES=$(python3 -c "
+# Load configuration from Python config and export directly
+python3 -c "
 import sys
+import os
 sys.path.append('..')
 from config import get_config
 config = get_config()
-print(f'REACT_APP_CHATBOT_NAME=\"{config.CHATBOT_NAME}\"')
-print(f'REACT_APP_CHATBOT_DESCRIPTION=\"{config.CHATBOT_DESCRIPTION}\"')
-print(f'REACT_APP_UI_PRIMARY_COLOR=\"{config.UI_PRIMARY_COLOR}\"')
-print(f'REACT_APP_UI_SECONDARY_COLOR=\"{config.UI_SECONDARY_COLOR}\"')
-print(f'REACT_APP_UI_BACKGROUND_GRADIENT_START=\"{config.UI_BACKGROUND_GRADIENT_START}\"')
-print(f'REACT_APP_UI_BACKGROUND_GRADIENT_END=\"{config.UI_BACKGROUND_GRADIENT_END}\"')
-")
-
-# Export environment variables
-export $CONFIG_VALUES
+os.environ['REACT_APP_CHATBOT_NAME'] = config.CHATBOT_NAME
+os.environ['REACT_APP_CHATBOT_DESCRIPTION'] = config.CHATBOT_DESCRIPTION
+os.environ['REACT_APP_WELCOME_MESSAGE'] = config.WELCOME_MESSAGE.replace('\n', '\\n')
+os.environ['REACT_APP_UI_PRIMARY_COLOR'] = config.UI_PRIMARY_COLOR
+os.environ['REACT_APP_UI_SECONDARY_COLOR'] = config.UI_SECONDARY_COLOR
+os.environ['REACT_APP_UI_BACKGROUND_GRADIENT_START'] = config.UI_BACKGROUND_GRADIENT_START
+os.environ['REACT_APP_UI_BACKGROUND_GRADIENT_END'] = config.UI_BACKGROUND_GRADIENT_END
+" && \
+export REACT_APP_CHATBOT_NAME="$(python3 -c 'import sys; sys.path.append(".."); from config import get_config; print(get_config().CHATBOT_NAME)')" && \
+export REACT_APP_CHATBOT_DESCRIPTION="$(python3 -c 'import sys; sys.path.append(".."); from config import get_config; print(get_config().CHATBOT_DESCRIPTION)')" && \
+export REACT_APP_WELCOME_MESSAGE="$(python3 -c 'import sys; sys.path.append(".."); from config import get_config; print(get_config().WELCOME_MESSAGE.replace("\n", "\\n"))')" && \
+export REACT_APP_UI_PRIMARY_COLOR="$(python3 -c 'import sys; sys.path.append(".."); from config import get_config; print(get_config().UI_PRIMARY_COLOR)')" && \
+export REACT_APP_UI_SECONDARY_COLOR="$(python3 -c 'import sys; sys.path.append(".."); from config import get_config; print(get_config().UI_SECONDARY_COLOR)')" && \
+export REACT_APP_UI_BACKGROUND_GRADIENT_START="$(python3 -c 'import sys; sys.path.append(".."); from config import get_config; print(get_config().UI_BACKGROUND_GRADIENT_START)')" && \
+export REACT_APP_UI_BACKGROUND_GRADIENT_END="$(python3 -c 'import sys; sys.path.append(".."); from config import get_config; print(get_config().UI_BACKGROUND_GRADIENT_END)')"
 
 # Export API URL if provided
 if [ ! -z "$REACT_APP_API_BASE_URL" ]; then
@@ -34,6 +41,7 @@ fi
 echo "Building with configuration:"
 echo "  Chatbot Name: $REACT_APP_CHATBOT_NAME"
 echo "  Description: $REACT_APP_CHATBOT_DESCRIPTION"
+echo "  Welcome Message: $REACT_APP_WELCOME_MESSAGE"
 echo "  Primary Color: $REACT_APP_UI_PRIMARY_COLOR"
 echo "  Secondary Color: $REACT_APP_UI_SECONDARY_COLOR"
 

@@ -7,7 +7,7 @@ export const useChat = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
   const [sources, setSources] = useState([]);
-  const [selectedSchool, setSelectedSchool] = useState(null);
+
   
   // Helper function to generate session ID
   const generateSessionId = () => {
@@ -50,8 +50,8 @@ export const useChat = () => {
     setIsLoading(true);
 
     try {
-      // Call API with session ID and selected school
-      const response = await chatService.sendMessage(message, sessionId, selectedSchool);
+      // Call API with session ID
+      const response = await chatService.sendMessage(message, sessionId);
       console.log(response.prompt);
       if (response.success) {
         // Add assistant response with messageId from Lambda
@@ -81,13 +81,13 @@ export const useChat = () => {
       
       // Add error message to chat
       addMessage('assistant', 
-        'I apologize, but I encountered an error. Please try again or contact the school directly for assistance.',
+        'I apologize, but I encountered an error. Please try again or contact support for assistance.',
         { isError: true }
       );
     } finally {
       setIsLoading(false);
     }
-  }, [isLoading, addMessage, sessionId, selectedSchool]);
+  }, [isLoading, addMessage, sessionId]);
 
   // Clear chat and start new session
   const clearChat = useCallback(() => {
@@ -119,8 +119,7 @@ export const useChat = () => {
     error,
     sources,
     sessionId,
-    selectedSchool,
-    setSelectedSchool,
+
     sendMessage,
     clearChat,
     addMessage,

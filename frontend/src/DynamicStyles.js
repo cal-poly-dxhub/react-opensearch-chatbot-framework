@@ -4,6 +4,9 @@ import config from './config';
 export const generateDynamicStyles = () => {
   const { colors } = config.ui;
   
+  // Debug logging
+  console.log('Dynamic styles colors:', colors);
+  
   const style = document.createElement('style');
   style.textContent = `
     :root {
@@ -13,8 +16,14 @@ export const generateDynamicStyles = () => {
       --gradient-end: ${colors.backgroundGradientEnd};
     }
     
+    body {
+      background: linear-gradient(135deg, var(--gradient-start) 0%, var(--gradient-end) 100%) !important;
+      min-height: 100vh !important;
+    }
+    
     .chat-container {
       background: linear-gradient(135deg, var(--gradient-start) 0%, var(--gradient-end) 100%) !important;
+      min-height: 100vh !important;
     }
     
     .header-content h1 {
@@ -86,14 +95,7 @@ export const generateDynamicStyles = () => {
       background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%) !important;
     }
     
-    .school-dropdown:focus {
-      border-color: var(--primary-color) !important;
-      box-shadow: 0 0 0 2px rgba(${hexToRgb(colors.primary)}, 0.2) !important;
-    }
-    
-    .school-dropdown optgroup {
-      color: var(--primary-color) !important;
-    }
+
   `;
   
   return style;

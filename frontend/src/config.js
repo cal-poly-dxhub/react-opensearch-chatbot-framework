@@ -2,7 +2,8 @@
 const config = {
   chatbot: {
     name: process.env.REACT_APP_CHATBOT_NAME || "My AI Assistant",
-    description: process.env.REACT_APP_CHATBOT_DESCRIPTION || "Get help with information and questions"
+    description: process.env.REACT_APP_CHATBOT_DESCRIPTION || "Get help with information and questions",
+    welcomeMessage: process.env.REACT_APP_WELCOME_MESSAGE || "Welcome! How can I help you today?"
   },
   ui: {
     colors: {

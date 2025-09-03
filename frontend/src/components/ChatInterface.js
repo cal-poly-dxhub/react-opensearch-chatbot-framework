@@ -2,7 +2,6 @@ import React from 'react';
 import MessageList from './MessageList';
 import ChatInput from './ChatInput';
 import Sidebar from './Sidebar';
-import SchoolSelector from './SchoolSelector';
 import PDFDownload from './PDFDownload';
 import { useChat } from '../hooks/useChat';
 import '../styles/Chat.css';
@@ -15,8 +14,6 @@ const ChatInterface = () => {
     error,
     sources,
     sessionId,
-    selectedSchool,
-    setSelectedSchool,
     sendMessage,
     clearChat,
     getAverageResponseTime,
@@ -55,10 +52,6 @@ const ChatInterface = () => {
 
         {/* Sidebar */}
         <div className="chat-sidebar">
-          <SchoolSelector 
-            selectedSchool={selectedSchool}
-            onSchoolChange={setSelectedSchool}
-          />
           <PDFDownload />
           <Sidebar 
             sources={sources || []}

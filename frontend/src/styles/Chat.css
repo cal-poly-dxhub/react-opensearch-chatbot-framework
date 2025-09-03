@@ -33,7 +33,7 @@ body {
   display: flex;
   flex-direction: column;
   flex: 1; /* Changed from height: 100vh to flex: 1 */
-  background: linear-gradient(135deg, #1A2F71 0%, #48AEB2 100%);
+  background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
   position: relative;
   overflow: hidden;
 }
@@ -50,17 +50,14 @@ body {
 }
 
 .chat-header {
-  background: rgba(255, 255, 255);
-  backdrop-filter: blur(20px);
+  background: transparent;
   padding: 0.5rem;
   text-align: center;
-  /* position: relative; */
   z-index: 10;
   align-items: center;
   justify-content: center;
-    /* background-color: red; */
-
   display: flex;
+  width: 100%;
 }
 
 
@@ -80,7 +77,7 @@ body {
 }
 
 .header-content h1 {
-  color: #1A2F71;
+  color: var(--primary-color);
   margin: 0;
   font-size: 2.5rem;
   font-weight: 700;
@@ -89,8 +86,8 @@ body {
 }
 
 .header-content p {
-  color: #48AEB2;
-  margin: 0.75rem 0 0 0;
+  color: var(--secondary-color);
+  margin: 1.5rem 0 0 0;
   font-size: 1.1rem;
   font-weight: 500;
   text-align: center;
@@ -188,10 +185,13 @@ body {
   color: #64748b;
   max-width: 600px;
   margin: 0 auto;
+  background: #f8fafc;
+  border-radius: 16px;
+  border: 1px solid #e2e8f0;
 }
 
 .welcome-message h3 {
-  color: #1A2F71;
+  color: var(--primary-color);
   margin-bottom: 1.5rem;
   font-size: 1.5rem;
   font-weight: 600;
@@ -205,11 +205,12 @@ body {
 
 .welcome-message ul {
   text-align: left;
-  display: inline-block;
-  background: #f8fafc;
-  padding: 2rem;
-  border-radius: 16px;
-  border: 1px solid #e2e8f0;
+  display: block;
+  background: transparent;
+  padding: 0;
+  border-radius: 0;
+  border: none;
+  margin: 0;
 }
 
 .welcome-message li {
@@ -217,6 +218,7 @@ body {
   padding-left: 0.5rem;
   color: #475569;
   font-weight: 500;
+  text-align: left;
 }
 
 /* Message Bubbles */
@@ -231,7 +233,7 @@ body {
 }
 
 .user-message {
-  background: linear-gradient(135deg, #1A2F71 0%, #48AEB2 100%);
+  background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
   color: white;
   align-self: flex-end;
   margin-left: auto;
@@ -261,14 +263,14 @@ body {
 }
 
 .message-link {
-  color: #1A2F71;
+  color: var(--primary-color);
   text-decoration: underline;
   font-weight: 600;
   transition: color 0.2s ease;
 }
 
 .message-link:hover {
-  color: #48AEB2;
+  color: var(--secondary-color);
 }
 
 .user-message .message-link {
@@ -349,14 +351,14 @@ body {
 }
 
 .feedback-textarea:focus {
-  border-color: #1A2F71;
+  border-color: var(--primary-color);
   box-shadow: 0 0 0 2px rgba(26, 47, 113, 0.1);
 }
 
 .feedback-submit-btn {
   margin-top: 0.5rem;
   padding: 0.5rem 1rem;
-  background: #1A2F71;
+  background: var(--primary-color);
   color: white;
   border: none;
   border-radius: 6px;
@@ -367,7 +369,7 @@ body {
 }
 
 .feedback-submit-btn:hover {
-  background: #48AEB2;
+  background: var(--secondary-color);
 }
 
 .feedback-submitted {
@@ -402,7 +404,7 @@ body {
   width: 10px;
   height: 10px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #1A2F71 0%, #48AEB2 100%);
+  background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
   animation: typing 1.6s infinite ease-in-out;
 }
 
@@ -469,7 +471,7 @@ body {
 }
 
 .message-input:focus {
-  border-color: #1A2F71;
+  border-color: var(--primary-color);
   box-shadow: 0 0 0 3px rgba(26, 47, 113, 0.1);
   transform: translateY(-1px);
 }
@@ -480,7 +482,7 @@ body {
 
 .send-button {
   padding: 1rem;
-  background: linear-gradient(135deg, #1A2F71 0%, #48AEB2 100%);
+  background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
   color: white;
   border: none;
   border-radius: 16px;
@@ -511,7 +513,7 @@ body {
 
 .input-status {
   font-size: 0.85rem;
-  color: #1A2F71;
+  color: var(--primary-color);
   margin-top: 0.75rem;
   font-weight: 500;
 }
@@ -579,7 +581,7 @@ body {
   width: 100%;
   padding: 1rem 1.5rem;
   background: rgba(255, 255, 255, 0.1);
-  color: #1A2F71;
+  color: white;
   border: 1px solid rgba(255, 255, 255, 0.2);
   border-radius: 16px;
   cursor: pointer;
@@ -618,7 +620,7 @@ body {
   width: 100%;
   padding: 0.75rem 1rem;
   margin-top: 1rem;
-  background: linear-gradient(135deg, #1A2F71 0%, #48AEB2 100%);
+  background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
   color: white;
   border: none;
   border-radius: 12px;
@@ -638,56 +640,11 @@ body {
   transform: translateY(0);
 }
 
-/* School Selector */
-.school-selector {
-  background: rgba(255, 255, 255, 0.15);
-  backdrop-filter: blur(20px);
-  border-radius: 16px;
-  padding: 1.5rem;
-  margin-bottom: 1rem;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-}
-
-.school-selector h3 {
-  color: white;
-  margin: 0 0 1rem 0;
-  font-size: 1rem;
-  font-weight: 600;
-}
-
-.school-dropdown {
-  width: 100%;
-  padding: 0.75rem;
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  border-radius: 8px;
-  background: rgba(255, 255, 255, 0.9);
-  color: #1A2F71;
-  font-size: 0.9rem;
-  font-weight: 500;
-  outline: none;
-  cursor: pointer;
-}
-
-.school-dropdown:focus {
-  border-color: #1A2F71;
-  box-shadow: 0 0 0 2px rgba(26, 47, 113, 0.2);
-}
-
-.school-dropdown optgroup {
-  font-weight: 600;
-  color: #1A2F71;
-}
-
-.school-dropdown option {
-  padding: 0.5rem;
-  font-weight: 400;
-}
-
 /* PDF Download Button */
 .pdf-download-btn {
   width: 100%;
   padding: 0.75rem 1rem;
-  background: linear-gradient(135deg, #1A2F71 0%, #48AEB2 100%);
+  background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
   color: white;
   border: none;
   border-radius: 12px;

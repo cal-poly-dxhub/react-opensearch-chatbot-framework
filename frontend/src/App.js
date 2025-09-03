@@ -25,11 +25,13 @@ function App() {
         padding: '0.5rem',
         color: 'white',
         display: 'flex',
-        justifyContent: 'center'
+        justifyContent: 'center',
+        background: 'white',
+        width: '100%'
       }}>
         <div className="chat-header">
           <div className="header-content">
-            <img src={logo} alt="Orcutt Union School District" className="header-logo" />
+            <img src={logo} alt={config.chatbot.name} className="header-logo" />
             <div className="header-text">
               <h1>{config.chatbot.name}</h1>
               <p style={{marginTop:-7}}>{config.chatbot.description}</p>

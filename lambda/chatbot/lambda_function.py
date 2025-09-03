@@ -53,7 +53,7 @@ def lambda_handler(event, context):
             return create_error_response(400, "Message/Session ID is missing")
         
         # Initialize the chatbot
-        chatbot = OrcuttChatbot()
+        chatbot = GenericChatbot()
         
         # Process the chat request
         result = chatbot.process_chat_request(message, session_id)
@@ -87,7 +87,7 @@ def handle_feedback_request(body: Dict) -> Dict:
             return create_error_response(400, "feedbackType must be 'up' or 'down'")
         
         # Update the existing conversation item with feedback
-        chatbot = OrcuttChatbot()
+        chatbot = GenericChatbot()
         success = chatbot.update_conversation_with_feedback(session_id, message_id, feedback_type, feedback_text)
         
         if success:
@@ -132,7 +132,7 @@ def create_error_response(status_code, message):
         })
     }
 
-class OrcuttChatbot:
+class GenericChatbot:
     def __init__(self):
         self.bedrock_client = None
         self.bedrock_agent_runtime = None
@@ -156,7 +156,7 @@ class OrcuttChatbot:
             logger.error(f"Failed to initialize AWS clients: {str(e)}")
             raise
     
-    def process_chat_request(self, message: str, session_id: str, selected_school: str) -> Dict:
+    def process_chat_request(self, message: str, session_id: str) -> Dict:
         """Main method to process chat request with full functionality"""
         start_time = time.time()
         
@@ -181,7 +181,7 @@ class OrcuttChatbot:
             # Step 4: Generate response with conversation context
             conversation_context = self.format_conversation_context(conversation_history)
             response_text, generation_time = self.generate_response(
-                message, context, query_type, conversation_context, selected_school
+                message, context, query_type, conversation_context
             )
             
             total_time = round(time.time() - start_time, 2)
@@ -510,7 +510,7 @@ class OrcuttChatbot:
             logging.error(f"Error generating presigned URL: {str(e)}")
             return None
     
-    def generate_response(self, query: str, context: str, query_type: str, conversation_context: str, selected_school: str) -> Tuple[str, float]:
+    def generate_response(self, query: str, context: str, query_type: str, conversation_context: str) -> Tuple[str, float]:
         """Generate response using Claude with conversation context"""
         start_time = time.time()
         
@@ -528,8 +528,7 @@ class OrcuttChatbot:
                     current_date=date.today(),
                     conversation_context=conversation_context,
                     context=context,
-                    query=query,
-                    selected_school=selected_school
+                    query=query
                 )
 
                 body = {
@@ -555,4 +554,4 @@ class OrcuttChatbot:
                 
         except Exception as e:
             logging.error(f"Error generating response: {str(e)}")
-            return "I'm sorry, I encountered an error while processing your request. Please try again or contact the school directly for assistance.", 0
+            return "I'm sorry, I encountered an error while processing your request. Please try again or contact support for assistance.", 0

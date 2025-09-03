@@ -1,5 +1,5 @@
 """
-Configuration settings for Orcutt Chatbot CDK deployment
+Configuration settings for Generic Chatbot CDK deployment
 """
 import os
 import yaml
@@ -48,6 +48,7 @@ class Config:
         ui_config = config_data.get('ui', {})
         self.CHATBOT_NAME = ui_config.get('name', 'My AI Assistant')
         self.CHATBOT_DESCRIPTION = ui_config.get('description', 'Get help with information and questions')
+        self.WELCOME_MESSAGE = ui_config.get('welcome_message', 'Welcome! How can I help you today?')
         colors_config = ui_config.get('colors', {})
         self.UI_PRIMARY_COLOR = colors_config.get('primary', '#1A2F71')
         self.UI_SECONDARY_COLOR = colors_config.get('secondary', '#48AEB2')
@@ -113,6 +114,7 @@ class Config:
         self.LAMBDA_ENV_VARS = {
             'CHATBOT_NAME': self.CHATBOT_NAME,
             'CHATBOT_DESCRIPTION': self.CHATBOT_DESCRIPTION,
+            'WELCOME_MESSAGE': self.WELCOME_MESSAGE,
             'USE_CLASSIFIER': str(self.USE_CLASSIFIER).lower(),
             'CLASSIFIER_MODEL_ID': self.CLASSIFIER_MODEL_ID,
             'RAG_MODEL_ID': self.RAG_MODEL_ID,

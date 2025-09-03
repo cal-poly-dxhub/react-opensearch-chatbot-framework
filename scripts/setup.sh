@@ -4,7 +4,10 @@
 
 set -e
 
-echo "Setting up Orcutt Chatbot..."
+# Change to project root directory
+cd "$(dirname "$0")/.."
+
+echo "Setting up Chatbot..."
 
 # Check prerequisites
 echo "Checking prerequisites..."

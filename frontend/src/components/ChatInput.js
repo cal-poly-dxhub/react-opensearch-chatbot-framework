@@ -50,7 +50,7 @@ const ChatInput = ({ onSendMessage, isLoading, disabled = false }) => {
             value={message}
             onChange={handleChange}
             onKeyPress={handleKeyPress}
-            placeholder="Ask me about Orcutt Schools..."
+            placeholder="How can I help you today?"
             disabled={isLoading || disabled}
             rows={1}
             className="message-input"

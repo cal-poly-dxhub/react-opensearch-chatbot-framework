@@ -1,6 +1,7 @@
 // src/components/MessageList.js
 import React, { useEffect, useRef } from 'react';
 import MessageBubble from './MessageBubble';
+import config from '../config';
 
 const MessageList = ({ messages, isLoading, sessionId }) => {
   const messagesEndRef = useRef(null);
@@ -10,22 +11,26 @@ const MessageList = ({ messages, isLoading, sessionId }) => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
+  // Format welcome message with line breaks
+  const formatWelcomeMessage = (message) => {
+    // Handle both actual newlines and escaped \n sequences
+    const normalizedMessage = message.replace(/\\n/g, '\n');
+    return normalizedMessage.split(/\r?\n/).map((line, index) => {
+      if (line.trim().startsWith('- ')) {
+        return <li key={index}>{line.trim().substring(2)}</li>;
+      } else if (line.trim()) {
+        return <p key={index}>{line.trim()}</p>;
+      }
+      return null;
+    }).filter(Boolean);
+  };
+
   return (
     <div className="message-list">
       {messages.length === 0 && (
         <div className="welcome-message">
-          <h3>Welcome to Orcutt Schools Assistant!</h3>
-          <p>I'm here to help you with information about our schools. Ask me about:</p>
-          <ul>
-            <li>Academic programs and curriculum</li>
-            <li>School hours and schedules</li>
-            <li>Contact information and staff directory</li>
-            <li>Sports and extracurricular activities</li>
-            <li>Transportation and bus routes</li>
-            <li>Lunch menus and nutrition</li>
-            <li>School calendar and events</li>
-            <li>Enrollment and registration</li>
-          </ul>
+          <h3>Welcome to {config.chatbot.name}!</h3>
+          {formatWelcomeMessage(config.chatbot.welcomeMessage.replace(/^Welcome to.*?\n/, ''))}
         </div>
       )}
       

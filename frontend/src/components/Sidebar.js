@@ -78,7 +78,7 @@ const Sidebar = ({
       <div className="sidebar-section">
         <h3>Need Help?</h3>
         <p className="help-text">
-          Contact Orcutt Schools directly if you need immediate assistance or can't find the information you're looking for.
+          Contact the organization directly if you need immediate assistance or can't find the information you're looking for.
         </p>
         <p className="help-text">
           Your conversation history is automatically saved for this session.

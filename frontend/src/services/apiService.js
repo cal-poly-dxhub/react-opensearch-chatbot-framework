@@ -39,23 +39,17 @@ export const chatService = {
    * Send a chat message
    * @param {string} message - User message
    * @param {string} sessionId - Session identifier
-   * @param {string} selectedSchool - Selected school (optional)
    * @returns {Promise} API response
    */
-  sendMessage: async (message, sessionId, selectedSchool = null) => {
+  sendMessage: async (message, sessionId) => {
     try {
       const payload = {
         message: message.trim(),
         sessionId,
       };
       
-      if (selectedSchool) {
-        payload.selectedSchool = selectedSchool;
-      }
-      
       const response = await apiClient.post('/chat', payload);
       console.log("Session ID sent:", sessionId);
-      console.log("Selected school:", selectedSchool);
       console.log("Chat response:", response.data);
       return response.data;
     } catch (error) {

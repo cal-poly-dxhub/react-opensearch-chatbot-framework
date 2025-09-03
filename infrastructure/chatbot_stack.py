@@ -21,7 +21,7 @@ from constructs import Construct
 from config import get_config
 import json
 
-class OrcuttChatbotStack(Stack):
+class ChatbotStack(Stack):
     def __init__(self, scope: Construct, construct_id: str, **kwargs) -> None:
         super().__init__(scope, construct_id, **kwargs)
         
@@ -29,7 +29,7 @@ class OrcuttChatbotStack(Stack):
         self.config = get_config()
 
         # Use existing S3 bucket for knowledge base documents
-        source_bucket = s3.Bucket.from_bucket_name(self, "SourceBucket", self.config.S3_KB_BUCKET)
+        source_bucket = s3.Bucket.from_bucket_name(self, "SourceBucket", self.config.get_s3_bucket_name('kb'))
 
         # OpenSearch Domain for Knowledge Base
         domain = opensearch.Domain(
@@ -198,7 +198,7 @@ class OrcuttChatbotStack(Stack):
         index_creator = lambda_.Function(
             self, "IndexCreator",
             runtime=lambda_.Runtime.PYTHON_3_9,
-            handler="index.handler",
+            handler="lambda_function.lambda_handler",
             role=index_creator_role,
             timeout=Duration.minutes(10),
             layers=[opensearch_layer],
@@ -206,166 +206,7 @@ class OrcuttChatbotStack(Stack):
                 "DOMAIN_NAME": self.config.get_opensearch_domain_name(),
                 "REGION": self.region
             },
-            code=lambda_.Code.from_inline("""
-import json
-import boto3
-from opensearchpy import OpenSearch, RequestsHttpConnection, AWSV4SignerAuth
-
-def create_opensearch_index(domain_endpoint=None, index_name="orcuttindex", region="us-west-2"):
-    # Use provided endpoint or get it automatically
-    index_name = "orcuttindex"
-    if not domain_endpoint:
-        print("ERROR: No domain endpoint provided")
-        return False
-    
-    print(f"Creating index '{index_name}' on domain '{domain_endpoint}'")
-    
-    try:
-        # Set up OpenSearch client with AWS auth
-        service = "es"  # For managed clusters, use "es" not "aoss"
-        credentials = boto3.Session().get_credentials()
-        awsauth = AWSV4SignerAuth(credentials, region, service)
-        
-        os_client = OpenSearch(
-            hosts=[{"host": domain_endpoint, "port": 443}],
-            http_auth=awsauth,
-            use_ssl=True,
-            verify_certs=True,
-            timeout=300,
-            connection_class=RequestsHttpConnection,
-        )
-        
-        # Simplified index mapping that should work
-        mapping = {
-            "settings": {
-                "index.knn": True
-            },
-            "mappings": {
-                "dynamic": True,
-                "properties": {
-                    "vector": {
-                        "type": "knn_vector",
-                        "dimension": 1024,
-                        "method": {
-                            "name": "hnsw",
-                            "space_type": "l2",
-                            "engine": "FAISS",
-                            "parameters": {}
-                        }
-                    },
-                    "text": {
-                        "type": "text",
-                        "fields": {"keyword": {"type": "keyword"}}
-                    },
-                    "metadata": {
-                        "type": "object",
-                        "enabled": False
-                    }
-                }
-            }
-        }
-        
-        # Check if index exists, create if not
-        if not os_client.indices.exists(index=index_name):
-            print(f"Index '{index_name}' does not exist. Creating...")
-            response = os_client.indices.create(index=index_name, body=mapping)
-            print(f"Create response: {response}")
-            
-            # Verify creation
-            if os_client.indices.exists(index=index_name):
-                print(f"Index '{index_name}' created successfully.")
-                return True
-            else:
-                print(f"Failed to create index '{index_name}'")
-                return False
-        else:
-            print(f"Index '{index_name}' already exists!")
-            
-            # Optionally, get index info
-            try:
-                index_info = os_client.indices.get(index=index_name)
-                print(f"Index mapping: {json.dumps(index_info[index_name]['mappings'], indent=2, default=str)}")
-            except Exception as e:
-                print(f"Could not get index info: {e}")
-            return True
-            
-    except Exception as e:
-        print(f"ERROR: {str(e)}")
-        import traceback
-        traceback.print_exc()
-        return False
-
-def get_domain_endpoint(domain_name, region):
-    \"\"\"Helper function to get your OpenSearch domain endpoint\"\"\"
-    try:
-        opensearch_client = boto3.client('opensearch', region_name=region)
-        response = opensearch_client.describe_domain(DomainName=domain_name)
-        endpoint = response['DomainStatus']['Endpoint']
-        print(f"Found domain endpoint: {endpoint}")
-        return endpoint
-    except Exception as e:
-        print(f"Error getting domain endpoint: {e}")
-        return None
-
-def handler(event, context):
-    print("Starting OpenSearch Index Creation Lambda")
-    print(f"Event: {json.dumps(event, default=str)}")
-    
-    if event['RequestType'] == 'Delete':
-        print("Delete event - skipping index deletion for safety")
-        return {
-            'Status': 'SUCCESS', 
-            'PhysicalResourceId': 'vector-index',
-            'Data': {'Message': 'Index deletion skipped for safety'}
-        }
-    
-    try:
-        # Get parameters from CDK
-        domain_name = event['ResourceProperties']['DomainName']
-        region = event['ResourceProperties']['Region']
-        index_name = event['ResourceProperties']['IndexName']
-        
-        print(f"Starting OpenSearch Index Creation Script")
-        print(f"Domain: {domain_name}, Region: {region}, Index: {index_name}")
-        
-        # First, try to get the domain endpoint automatically
-        auto_endpoint = get_domain_endpoint(domain_name, region)
-        if auto_endpoint:
-            print(f"Using auto-detected endpoint: {auto_endpoint}")
-        
-        # Create the index (using dynamic parameters)
-        success = create_opensearch_index(
-            domain_endpoint=auto_endpoint,
-            index_name=index_name,
-            region=region
-        )
-        
-        if success:
-            print("Script completed successfully!")
-            return {
-                'Status': 'SUCCESS',
-                'PhysicalResourceId': f'vector-index-{index_name}',
-                'Data': {
-                    'IndexName': index_name,
-                    'Message': f'Index {index_name} created successfully'
-                }
-            }
-        else:
-            print("Script failed!")
-            return {
-                'Status': 'FAILED',
-                'Reason': 'Index creation failed'
-            }
-            
-    except Exception as e:
-        print(f"Lambda Error: {str(e)}")
-        import traceback
-        traceback.print_exc()
-        return {
-            'Status': 'FAILED',
-            'Reason': f"Lambda failed: {str(e)}"
-        }
-""")
+            code=lambda_.Code.from_asset("scripts")
         )
 
         # Custom resource to create/check the vector index
@@ -445,9 +286,6 @@ def handler(event, context):
             ),
         )
 
-
-
-
         # DynamoDB table for conversation history
         conversation_table = aws_dynamodb.Table(
             self, "ConversationTable",
@@ -475,8 +313,7 @@ def handler(event, context):
             memory_size=self.config.CHATBOT_MEMORY,
             environment={
                 "DYNAMODB_TABLE": conversation_table.table_name,
-                "KNOWLEDGE_BASE_ID": kb.ref,
-                **self.config.LAMBDA_ENV_VARS
+                "KNOWLEDGE_BASE_ID": kb.ref
             }
         )
 
@@ -521,8 +358,7 @@ def handler(event, context):
         # Frontend S3 bucket
         frontend_bucket = s3.Bucket(
             self, "FrontendBucket",
-            removal_policy=RemovalPolicy.DESTROY,
-            auto_delete_objects=True
+            removal_policy=RemovalPolicy.DESTROY
         )
 
         # CloudFront distribution
@@ -546,25 +382,16 @@ def handler(event, context):
             error_responses=error_responses
         )
 
-        # Deploy React build to S3 with environment variables
+        # Deploy React build to S3 (build folder must exist)
         s3deploy.BucketDeployment(
             self, "DeployFrontend",
             sources=[s3deploy.Source.asset("frontend/build")],
             destination_bucket=frontend_bucket,
             distribution=distribution,
-            distribution_paths=["/*"],
-            environment={
-                "REACT_APP_CHATBOT_NAME": self.config.CHATBOT_NAME,
-                "REACT_APP_CHATBOT_DESCRIPTION": self.config.CHATBOT_DESCRIPTION,
-                "REACT_APP_UI_PRIMARY_COLOR": self.config.UI_PRIMARY_COLOR,
-                "REACT_APP_UI_SECONDARY_COLOR": self.config.UI_SECONDARY_COLOR,
-                "REACT_APP_UI_BACKGROUND_GRADIENT_START": self.config.UI_BACKGROUND_GRADIENT_START,
-                "REACT_APP_UI_BACKGROUND_GRADIENT_END": self.config.UI_BACKGROUND_GRADIENT_END
-            }
+            distribution_paths=["/*"]
         )
 
         # Outputs
-
         CfnOutput(
             self, "ChatbotLambdaArn",
             value=chatbot_lambda.function_arn,
@@ -593,4 +420,22 @@ def handler(event, context):
             self, "DynamoDBTableName",
             value=conversation_table.table_name,
             description="DynamoDB table for conversations"
+        )
+
+        CfnOutput(
+            self, "KnowledgeBaseId",
+            value=kb.ref,
+            description="Bedrock Knowledge Base ID"
+        )
+
+        CfnOutput(
+            self, "DataSourceId",
+            value=data_source.ref,
+            description="Bedrock Data Source ID"
+        )
+
+        CfnOutput(
+            self, "CloudFrontDistributionId",
+            value=distribution.distribution_id,
+            description="CloudFront Distribution ID"
         )
