@@ -96,10 +96,10 @@ ui:
     - Resources and support
     - Frequently asked questions
   colors:
-    primary: "#DC143C"
-    secondary: "#FF4500"
-    background_gradient_start: "#800000"
-    background_gradient_end: "#FF6347"
+    primary: "#1A2F71"
+    secondary: "#48AEB2"
+    background_gradient_start: "#1A2F71"
+    background_gradient_end: "#48AEB2"
 
 dynamodb:
   table_name: chatbot-conversations
