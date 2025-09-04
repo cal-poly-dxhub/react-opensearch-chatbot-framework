@@ -361,7 +361,7 @@ class ChatbotStack(Stack):
             removal_policy=RemovalPolicy.DESTROY
         )
 
-        # CloudFront distribution
+        # CloudFront distribution with caching configuration
         error_responses = []
         for error_config in self.config.CLOUDFRONT_ERROR_RESPONSES:
             error_responses.append(
@@ -372,12 +372,56 @@ class ChatbotStack(Stack):
                 )
             )
         
+        # Check if caching is enabled in config
+        caching_enabled = self.config.config.get('cloudfront', {}).get('caching', {}).get('enabled', True)
+        
+        # Create additional behaviors for different file types (only if caching enabled)
+        additional_behaviors = {}
+        
+        if caching_enabled:
+            # Static assets with long cache
+            for pattern in ["/static/*", "*.js", "*.css"]:
+                additional_behaviors[pattern] = cloudfront.BehaviorOptions(
+                    origin=origins.S3Origin(frontend_bucket),
+                    viewer_protocol_policy=cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+                    cache_policy=cloudfront.CachePolicy.CACHING_OPTIMIZED,
+                    compress=True,
+                    allowed_methods=cloudfront.AllowedMethods.ALLOW_GET_HEAD,
+                    cached_methods=cloudfront.CachedMethods.CACHE_GET_HEAD
+                )
+            
+            # Images with medium cache
+            for pattern in ["*.png", "*.jpg", "*.svg", "*.ico"]:
+                additional_behaviors[pattern] = cloudfront.BehaviorOptions(
+                    origin=origins.S3Origin(frontend_bucket),
+                    viewer_protocol_policy=cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+                    cache_policy=cloudfront.CachePolicy.CACHING_OPTIMIZED,
+                    compress=True,
+                    allowed_methods=cloudfront.AllowedMethods.ALLOW_GET_HEAD,
+                    cached_methods=cloudfront.CachedMethods.CACHE_GET_HEAD
+                )
+            
+            # Don't cache index.html to ensure updates are reflected
+            additional_behaviors["/index.html"] = cloudfront.BehaviorOptions(
+                origin=origins.S3Origin(frontend_bucket),
+                viewer_protocol_policy=cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+                cache_policy=cloudfront.CachePolicy.CACHING_DISABLED
+            )
+        
+        # Set cache policy based on config
+        default_cache_policy = cloudfront.CachePolicy.CACHING_OPTIMIZED if caching_enabled else cloudfront.CachePolicy.CACHING_DISABLED
+        
         distribution = cloudfront.Distribution(
             self, "FrontendDistribution",
             default_behavior=cloudfront.BehaviorOptions(
                 origin=origins.S3Origin(frontend_bucket),
-                viewer_protocol_policy=cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS
+                viewer_protocol_policy=cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+                cache_policy=default_cache_policy,
+                compress=True,
+                allowed_methods=cloudfront.AllowedMethods.ALLOW_GET_HEAD,
+                cached_methods=cloudfront.CachedMethods.CACHE_GET_HEAD
             ),
+            additional_behaviors=additional_behaviors,
             default_root_object=self.config.CLOUDFRONT_DEFAULT_ROOT_OBJECT,
             error_responses=error_responses
         )

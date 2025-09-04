@@ -166,6 +166,51 @@ cloudfront:
     - http_status: 404
       response_http_status: 200
       response_page_path: /index.html
+  caching:
+    enabled: false  # Set to false to disable all caching
+    default_behavior:
+      cache_policy: "managed-caching-optimized"  # AWS managed policy
+      origin_request_policy: "managed-cors-s3-origin"  # AWS managed policy
+      viewer_protocol_policy: "redirect-to-https"
+      allowed_methods: ["GET", "HEAD"]
+      cached_methods: ["GET", "HEAD"]
+      compress: true
+    path_patterns:
+      - path_pattern: "/static/*"
+        cache_policy: "managed-caching-optimized-for-uncompressed-objects"
+        ttl:
+          default: 86400  # 1 day
+          max: 31536000   # 1 year
+      - path_pattern: "*.js"
+        cache_policy: "managed-caching-optimized"
+        ttl:
+          default: 86400  # 1 day
+          max: 31536000   # 1 year
+      - path_pattern: "*.css"
+        cache_policy: "managed-caching-optimized"
+        ttl:
+          default: 86400  # 1 day
+          max: 31536000   # 1 year
+      - path_pattern: "*.png"
+        cache_policy: "managed-caching-optimized"
+        ttl:
+          default: 604800  # 1 week
+          max: 31536000    # 1 year
+      - path_pattern: "*.jpg"
+        cache_policy: "managed-caching-optimized"
+        ttl:
+          default: 604800  # 1 week
+          max: 31536000    # 1 year
+      - path_pattern: "*.svg"
+        cache_policy: "managed-caching-optimized"
+        ttl:
+          default: 604800  # 1 week
+          max: 31536000    # 1 year
+      - path_pattern: "/index.html"
+        cache_policy: "managed-caching-disabled"  # Don't cache main page
+        ttl:
+          default: 0
+          max: 0
 
 environments:
   dev:

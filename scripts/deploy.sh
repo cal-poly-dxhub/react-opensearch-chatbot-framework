@@ -69,16 +69,5 @@ REACT_APP_API_BASE_URL=$API_URL ./scripts/build-frontend.sh
 echo "Deploying frontend with correct API URL..."
 cdk deploy --require-approval never
 
-# Get CloudFront distribution ID and invalidate cache
-echo "Invalidating CloudFront cache..."
-DISTRIBUTION_ID=$(aws cloudformation describe-stacks --stack-name "$STACK_NAME" --region "$AWS_REGION" --query 'Stacks[0].Outputs[?OutputKey==`CloudFrontDistributionId`].OutputValue' --output text)
-if [ "$DISTRIBUTION_ID" != "None" ] && [ -n "$DISTRIBUTION_ID" ]; then
-    echo "Distribution ID: $DISTRIBUTION_ID"
-    aws cloudfront create-invalidation --distribution-id "$DISTRIBUTION_ID" --paths "/*"
-    echo "Cache invalidation initiated. Changes may take a few minutes to propagate."
-else
-    echo "Warning: Could not find CloudFront distribution ID. Cache not invalidated."
-fi
-
 echo "Deployment complete!"
 echo "Check AWS Console for deployed resources"
