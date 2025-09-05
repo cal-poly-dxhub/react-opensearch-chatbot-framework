@@ -29,8 +29,8 @@ class ChatbotStack(Stack):
         self.config = get_config()
 
         # Use existing S3 bucket for knowledge base documents
-        source_bucket = s3.Bucket.from_bucket_name(self, "SourceBucket", self.config.get_s3_bucket_name('kb'))
-
+        source_bucket = s3.Bucket.from_bucket_name(self, "SourceBucket", self.config.S3_KB_BUCKET)
+        
         # OpenSearch Domain for Knowledge Base
         domain = opensearch.Domain(
             self, "KnowledgeBaseOpenSearch",
@@ -303,6 +303,12 @@ class ChatbotStack(Stack):
         )
 
         # Chatbot Lambda Function
+        lambda_env_vars = self.config.LAMBDA_ENV_VARS.copy()
+        lambda_env_vars.update({
+            "DYNAMODB_TABLE": conversation_table.table_name,
+            "KNOWLEDGE_BASE_ID": kb.ref
+        })
+        
         chatbot_lambda = lambda_.Function(
             self, "ChatbotLambda",
             runtime=lambda_.Runtime.PYTHON_3_13,
@@ -311,13 +317,10 @@ class ChatbotStack(Stack):
             code=lambda_.Code.from_asset("backend/lambda/chatbot"),
             timeout=Duration.seconds(self.config.CHATBOT_TIMEOUT),
             memory_size=self.config.CHATBOT_MEMORY,
-            environment={
-                "DYNAMODB_TABLE": conversation_table.table_name,
-                "KNOWLEDGE_BASE_ID": kb.ref
-            }
+            environment=lambda_env_vars
         )
 
-        # Grant permissions to chatbot Lambda
+        # Grant permissions to chatbot Lambda - updated for S3 access
         conversation_table.grant_read_write_data(chatbot_lambda)
         chatbot_lambda.add_to_role_policy(
             iam.PolicyStatement(
@@ -325,6 +328,8 @@ class ChatbotStack(Stack):
                 resources=["*"]
             )
         )
+        # Add S3 permissions for presigned URL generation
+        source_bucket.grant_read(chatbot_lambda)
 
         # API Gateway
         api = apigateway.RestApi(
@@ -373,7 +378,13 @@ class ChatbotStack(Stack):
             )
         
         # Check if caching is enabled in config
-        caching_enabled = self.config.config.get('cloudfront', {}).get('caching', {}).get('enabled', True)
+        # Load raw config data to access caching settings
+        import yaml
+        from pathlib import Path
+        config_path = Path(__file__).parent.parent / "config.yaml"
+        with open(config_path, 'r') as file:
+            config_data = yaml.safe_load(file)
+        caching_enabled = config_data.get('cloudfront', {}).get('caching', {}).get('enabled', True)
         
         # Create additional behaviors for different file types (only if caching enabled)
         additional_behaviors = {}

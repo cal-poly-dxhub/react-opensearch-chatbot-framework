@@ -78,7 +78,7 @@ chatbot:
       Thank you for using the assistant! If you have any more questions, feel free to ask anytime. Have a great day!
 
 s3:
-  knowledge_base_bucket: cdk-testing-chatbot-framework
+  knowledge_base_bucket: your-source-document-bucket
   frontend_bucket: chatbot-frontend
 
 ui:
@@ -152,7 +152,6 @@ lambda:
     CLASSIFIER_PROMPT: "${chatbot.prompt.classifier}"
     GREETING_RESPONSE: "${chatbot.responses.greeting}"
     FAREWELL_RESPONSE: "${chatbot.responses.farewell}"
-
 api:
   name: ChatbotAPI
   cors:
@@ -216,10 +215,8 @@ environments:
   dev:
     debug: true
     cors_origins: ["*"]
-    s3_suffix: dev
     opensearch_suffix: dev
   prod:
     debug: false
     cors_origins: ["https://your-domain.com"]
-    s3_suffix: prod
     opensearch_suffix: prod

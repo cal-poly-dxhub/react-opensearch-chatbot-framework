@@ -10,14 +10,10 @@ const Sidebar = ({
   onSourceClick 
 }) => {
 
-  const handleFilenameClick = (source) => {
+  const handleSourceClick = (source) => {
     if (source.presignedUrl) {
       window.open(source.presignedUrl, '_blank');
-    }
-  };
-
-  const handleLinkClick = (source) => {
-    if (source.url) {
+    } else if (source.url) {
       window.open(source.url, '_blank');
     }
   };
@@ -53,20 +49,18 @@ const Sidebar = ({
                 <div className="source-content">
                   <span 
                     className="source-filename"
-                    onClick={() => handleFilenameClick(source)}
+                    onClick={() => handleSourceClick(source)}
                     style={{ cursor: 'pointer' }}
                   >
                     {source.filename}
                   </span>
-                  {source.url && (
-                    <span 
-                      className="source-link-icon"
-                      onClick={() => handleLinkClick(source)}
-                      style={{ cursor: 'pointer' }}
-                    >
-                      🔗
-                    </span>
-                  )}
+                  <span 
+                    className="source-link-icon"
+                    onClick={() => handleSourceClick(source)}
+                    style={{ cursor: 'pointer' }}
+                  >
+                    🔗
+                  </span>
                 </div>
               </div>
             ))}
