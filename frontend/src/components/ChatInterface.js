@@ -40,7 +40,7 @@ const ChatInterface = () => {
           {/* Error Display */}
           {error && (
             <div className="error-banner">
-              <p>⚠️ {error}</p>
+              <p>Warning: {error}</p>
             </div>
           )}
           

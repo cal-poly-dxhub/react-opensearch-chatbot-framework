@@ -28,8 +28,14 @@ class ChatbotStack(Stack):
         # Load configuration
         self.config = get_config()
 
-        # Use existing S3 bucket for knowledge base documents
-        source_bucket = s3.Bucket.from_bucket_name(self, "SourceBucket", self.config.S3_KB_BUCKET)
+        # S3 Bucket for knowledge base documents
+        source_bucket = s3.Bucket(
+            self, "KnowledgeBaseBucket",
+            bucket_name=self.config.get_s3_bucket_name('kb'),
+            versioned=True,
+            removal_policy=RemovalPolicy.DESTROY,
+            auto_delete_objects=True
+        )
         
         # OpenSearch Domain for Knowledge Base
         domain = opensearch.Domain(
@@ -286,6 +292,46 @@ class ChatbotStack(Stack):
             ),
         )
 
+        # Web Scraper Layer
+        webscraper_layer = lambda_.LayerVersion(
+            self, "WebScraperLayer",
+            code=lambda_.Code.from_asset("backend/layers/webscraper-layer", bundling={
+                "image": lambda_.Runtime.PYTHON_3_13.bundling_image,
+                "command": [
+                    "bash", "-c",
+                    "pip install -r requirements.txt -t /asset-output/python"
+                ]
+            }),
+            compatible_runtimes=[lambda_.Runtime.PYTHON_3_13],
+            description="Web scraping dependencies"
+        )
+
+        # Web Scraper Lambda Function
+        webscraper_lambda = lambda_.Function(
+            self, "WebScraperLambda",
+            runtime=lambda_.Runtime.PYTHON_3_13,
+            architecture=lambda_.Architecture.X86_64,
+            handler="lambda_function.lambda_handler",
+            code=lambda_.Code.from_asset("backend/lambda/webscraper"),
+            timeout=Duration.seconds(self.config.WEBSCRAPER_TIMEOUT),
+            layers=[webscraper_layer],
+            environment={
+                "S3_BUCKET_NAME": source_bucket.bucket_name
+            },
+            memory_size=self.config.WEBSCRAPER_MEMORY
+        )
+
+        # Grant S3 permissions to webscraper Lambda
+        source_bucket.grant_write(webscraper_lambda)
+        
+        # Grant Bedrock permissions to webscraper for auto-sync
+        webscraper_lambda.add_to_role_policy(
+            iam.PolicyStatement(
+                actions=["bedrock:StartIngestionJob", "bedrock:GetIngestionJob"],
+                resources=[f"arn:aws:bedrock:{self.region}:{self.account}:knowledge-base/*"]
+            )
+        )
+
         # DynamoDB table for conversation history
         conversation_table = aws_dynamodb.Table(
             self, "ConversationTable",
@@ -363,7 +409,8 @@ class ChatbotStack(Stack):
         # Frontend S3 bucket
         frontend_bucket = s3.Bucket(
             self, "FrontendBucket",
-            removal_policy=RemovalPolicy.DESTROY
+            removal_policy=RemovalPolicy.DESTROY,
+            auto_delete_objects=True
         )
 
         # CloudFront distribution with caching configuration
@@ -447,6 +494,12 @@ class ChatbotStack(Stack):
         )
 
         # Outputs
+        CfnOutput(
+            self, "WebScraperLambdaArn",
+            value=webscraper_lambda.function_arn,
+            description="Web scraper Lambda function ARN"
+        )
+
         CfnOutput(
             self, "ChatbotLambdaArn",
             value=chatbot_lambda.function_arn,

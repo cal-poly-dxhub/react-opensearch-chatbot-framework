@@ -19,6 +19,7 @@ You can use this README file to find out how to build, deploy, use and test the 
 - [Deployment](#initial-setup)
 - [Configurations](#configuration)
 - [Ingestion](#knowledge-base-sync-ingestion)
+- [Web Scraper](#web-scraper)
 - [Updating Changes](#updating-changes)
 - [Support](#support)
 
@@ -113,6 +114,12 @@ Additionally other AWS services are used for additional functionality
 **Amazon Bedrock Integration:**
 - Support for various embedding and text generation models
 - Managed document ingestion pipeline with multiple format support
+
+**Automated Web Scraping:**
+- Built-in web scraper for automated content ingestion
+- Crawls websites and downloads documents (PDFs, Office files, etc.)
+- Creates metadata files
+- Direct S3 upload with Bedrock-compatible metadata
 
 **Enterprise-Ready Architecture:**
 - Infrastructure as Code using AWS CDK
@@ -244,6 +251,39 @@ aws bedrock-agent get-ingestion-job \
     --data-source-id your-data-source-id \
     --ingestion-job-id your-ingestion-job-id \
     --region your-region-name
+```
+
+## Web Scraper
+
+The framework includes a web scraping system for automated content ingestion:
+
+### Quick Start
+
+```bash
+./scripts/run_webscraper.sh
+```
+The script
+1. downloads the content
+2. adds the content to the S3 bucket 
+3. runs the sync for Knowledge Base
+
+### Features
+- **Comprehensive Crawling**: Follows links and discovers content automatically
+- **Document Download**: Supports PDFs, Office documents, and other file types
+- **Smart Filtering**: Excludes downloading content from mentioned links
+- **Metadata Generation**: Creates Bedrock-compatible metadata for all content
+- **Sitemap Support**: Automatically discovers and processes sitemaps
+
+### Configuration
+Configure webscraper settings in `config.yaml`:
+```yaml
+lambda:
+  webscraper:
+    timeout: 900  # 15 minutes
+    memory: 1024  # Memory in MB
+    max_workers: 4  # Concurrent threads
+    max_pages: 200  # Maximum pages to crawl
+    excluded_urls: []  # Custom URL patterns to exclude
 ```
 
 

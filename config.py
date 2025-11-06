@@ -109,6 +109,14 @@ class Config:
         self.CHATBOT_TIMEOUT = chatbot_lambda_config.get('timeout', 300)
         self.CHATBOT_MEMORY = chatbot_lambda_config.get('memory', 1024)
         
+        webscraper_lambda_config = lambda_config.get('webscraper', {})
+        self.WEBSCRAPER_TIMEOUT = webscraper_lambda_config.get('timeout', 900)
+        self.WEBSCRAPER_MEMORY = webscraper_lambda_config.get('memory', 1024)
+        self.WEBSCRAPER_MAX_WORKERS = webscraper_lambda_config.get('max_workers', 4)
+        self.WEBSCRAPER_MAX_PAGES = webscraper_lambda_config.get('max_pages', 200)
+        self.WEBSCRAPER_EXCLUDED_URLS = webscraper_lambda_config.get('excluded_urls', [])
+        self.WEBSCRAPER_WEBSITES = webscraper_lambda_config.get('websites_to_scrape', [])
+        
         # Lambda environment variables
         env_vars_config = lambda_config.get('environment_variables', {})
         self.LAMBDA_ENV_VARS = {

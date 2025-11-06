@@ -48,7 +48,7 @@ cd ..
 if [ ! -f .env ]; then
     echo "Creating .env file from template..."
     cp .env.example .env
-    echo "WARNING: Please edit .env file with your AWS account details and Knowledge Base ID"
+    echo "WARNING: Please edit .env file with your AWS account details. The Knowledge Base ID will be filled automatically."
 fi
 
 echo "Setup complete!"
